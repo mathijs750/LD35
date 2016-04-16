@@ -1,0 +1,45 @@
+{
+    "Nodes": [
+        {
+            "ID": "A",
+            "Position": {
+                "x": 10.0,
+                "y": 10.0
+            },
+            "Neighbors": [
+                "C"
+            ]
+        },
+        {
+            "ID": "B",
+            "Position": {
+                "x": 10.0,
+                "y": 30.0
+            },
+            "Neighbors": [
+                "C"
+            ]
+        },
+        {
+            "ID": "C",
+            "Position": {
+                "x": 20.0,
+                "y": 20.0
+            },
+            "Neighbors": [
+                "A",
+                "B"
+            ]
+        },
+        {
+            "ID": "D",
+            "Position": {
+                "x": 40.0,
+                "y": 20.0
+            },
+            "Neighbors": [
+                "C"
+            ]
+        }
+    ]
+}
