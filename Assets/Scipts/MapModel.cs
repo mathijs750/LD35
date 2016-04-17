@@ -1,17 +1,22 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
+
+[System.Serializable]
+public enum edgeMode
+{
+    Normal, Exit, OneWay, Blocked
+}
+
+
 [System.Serializable]
 public struct nodeEdge
 {
-    public string A;
-    public string B;
-
-    public nodeEdge(string A, string B)
-    {
-        this.A = A;
-        this.B = B;
-    }
+    public string nodeA;
+    public string nodeB;
+    public int Cost;
+    public edgeMode Mode;
+    public int Traffic;
 }
 
 [System.Serializable]
@@ -23,20 +28,20 @@ public struct node
 }
 
 [System.Serializable]
-public struct map
+public struct Map
 {
     public node[] Nodes;
 }
 
 public class Graph
 {
-    public Dictionary<string, string[]> edges = new Dictionary<string, string[]>();
+    public Dictionary<string, string[]> nodes = new Dictionary<string, string[]>();
     public Dictionary<nodeEdge, int> specialEdges = new Dictionary<nodeEdge, int>();
     public Dictionary<string, Vector2> nodePositions = new Dictionary<string, Vector2>();
 
     public string[] Neighbors(string id)
     {
-        return edges[id];
+        return nodes[id];
     }
 
     public int Cost(string a, string b)
@@ -54,16 +59,30 @@ public class Graph
         }
         return 1;
     }
+
 }
 
+public struct MapAgent
+{
+    public string[] MovementQueue;
+    public int Ammount;
 
-public class RoadNode : MonoBehaviour
+    public MapAgent(string[] queue, int ammount)
+    {
+        MovementQueue = queue;
+        Ammount = ammount;
+    }
+}
+
+public class MapModel : MonoBehaviour
 {
     [SerializeField]
     private string start, goal;
     private List<GameObject> _sprites;
     [SerializeField]
     private GameObject sprite;
+    [SerializeField]
+    TextAsset jsonData;
 
     Dictionary<string, string> cameFrom = new Dictionary<string, string>();
     Dictionary<string, int> costSoFar = new Dictionary<string, int>();
@@ -73,28 +92,15 @@ public class RoadNode : MonoBehaviour
 
     public void Start()
     {
+        g.nodes = new Dictionary<string, string[]>();
+        g.nodePositions = new Dictionary<string, Vector2>();
 
-        g.edges = new Dictionary<string, string[]>
-            {
-            { "A", new [] { "C" , "F"} },
-            { "B", new [] { "C" } },
-            { "C", new [] { "A","B", "E", "F" } },
-            { "D", new [] { "C" , "F"} },
-            { "E", new [] { "C" } },
-            { "F", new [] { "A", "C", "D", "G" } },
-            { "G", new [] { "D", "F" } }
-        };
-
-        g.nodePositions = new Dictionary<string, Vector2>
+        var mapData = JsonUtility.FromJson<Map>(jsonData.text);
+        foreach (node node in mapData.Nodes)
         {
-            {"A", new Vector2(10,10) },
-            {"B", new Vector2(10,30) },
-            {"C", new Vector2(20,20) },
-            {"D", new Vector2(40,20) },
-            {"E", new Vector2(50,40) },
-            {"F", new Vector2(30,10) },
-            {"G", new Vector2(60,10) },
-        };
+            g.nodes.Add(node.ID, node.Neighbors);
+            g.nodePositions.Add(node.ID, node.Position);
+        }
 
         g.specialEdges = new Dictionary<nodeEdge, int>
         {
@@ -138,7 +144,6 @@ public class RoadNode : MonoBehaviour
                 break;
             }
 
-            Debug.Log("AT: " + current);
             foreach (var next in graph.Neighbors(current))
             {
                 int newCost = costSoFar[current] + graph.Cost(current, next);
