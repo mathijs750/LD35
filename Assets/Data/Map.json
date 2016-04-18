@@ -7,7 +7,9 @@
                 "y": 10.0
             },
             "Neighbors": [
-                "B","C","_B"
+                "B",
+                "C",
+                "_B"
             ]
         },
         {
@@ -17,7 +19,8 @@
                 "y": 20.0
             },
             "Neighbors": [
-                "C","_A"
+                "C",
+                "_A"
             ]
         },
         {
@@ -27,7 +30,8 @@
                 "y": 0.0
             },
             "Neighbors": [
-                "A","B"
+                "A",
+                "B"
             ]
         },
         {
@@ -49,6 +53,68 @@
             "Neighbors": [
                 "A"
             ]
+        }
+    ],
+    "Edges": [
+        {
+            "pairA": {
+                "NodeA": "A",
+                "NodeB": "B"
+            },
+            "pairB": {
+                "NodeA": "B",
+                "NodeB": "A"
+            },
+            "Cost": 2,
+            "Traffic": 0
+        },
+        {
+            "pairA": {
+                "NodeA": "A",
+                "NodeB": "C"
+            },
+            "pairB": {
+                "NodeA": "C",
+                "NodeB": "A"
+            },
+            "Cost": 2,
+            "Traffic": 0
+        },
+        {
+            "pairA": {
+                "NodeA": "A",
+                "NodeB": "_B"
+            },
+            "pairB": {
+                "NodeA": "_B",
+                "NodeB": "A"
+            },
+            "Cost": 2,
+            "Traffic": 0
+        },
+        {
+            "pairA": {
+                "NodeA": "B",
+                "NodeB": "C"
+            },
+            "pairB": {
+                "NodeA": "C",
+                "NodeB": "B"
+            },
+            "Cost": 2,
+            "Traffic": 0
+        },
+        {
+            "pairA": {
+                "NodeA": "B",
+                "NodeB": "_A"
+            },
+            "pairB": {
+                "NodeA": "_A",
+                "NodeB": "B"
+            },
+            "Cost": 2,
+            "Traffic": 0
         }
     ]
 }

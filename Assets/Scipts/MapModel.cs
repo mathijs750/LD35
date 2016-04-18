@@ -2,11 +2,6 @@
 using System.Collections.Generic;
 
 
-[System.Serializable]
-public enum edgeMode
-{
-    Normal, Exit, OneWay, Blocked
-}
 
 [System.Serializable]
 public struct nodePair
@@ -23,6 +18,11 @@ public struct nodePair
     public override string ToString()
     {
         return NodeA + "-" + NodeB;
+    }
+
+    public nodePair Reversed()
+    {
+        return new nodePair(NodeB, NodeA);
     }
 
     #region Comparison overrides
@@ -52,7 +52,6 @@ public struct nodeEdge
     public nodePair pairA;
     public nodePair pairB;
     public int Cost;
-    public edgeMode Mode;
     public int Traffic;
 }
 
@@ -73,9 +72,9 @@ public struct Map
 
 public class Graph
 {
-    public Dictionary<string, string[]> nodes = new Dictionary<string, string[]>();
-    public Dictionary<nodeEdge, int> specialEdges = new Dictionary<nodeEdge, int>();
-    public Dictionary<string, Vector2> nodePositions = new Dictionary<string, Vector2>();
+    public Dictionary<string, string[]> nodes;
+    public Dictionary<string, Vector2> nodePositions;
+    public Dictionary<nodePair, nodeEdge> edges;
 
     public string[] Neighbors(string id)
     {
@@ -84,17 +83,15 @@ public class Graph
 
     public int Cost(string a, string b)
     {
-    /*   var edgeA = new nodeEdge(a, b);
-        var edgeB = new nodeEdge(b, a);
-
-        if (specialEdges.ContainsKey(edgeA))
+        nodePair checkPair = new nodePair(a, b);
+        if (edges.ContainsKey(checkPair))
         {
-            return specialEdges[edgeA];
+            return edges[checkPair].Cost;
         }
-        else if (specialEdges.ContainsKey(edgeB))
+        else if (edges.ContainsKey(checkPair.Reversed()))
         {
-            return specialEdges[edgeB];
-        }*/
+            return edges[checkPair.Reversed()].Cost;
+        }
         return 1;
     }
 
@@ -122,64 +119,34 @@ public class MapModel : MonoBehaviour
     [SerializeField]
     TextAsset jsonData;
 
+    // search variables
     Dictionary<string, string> cameFrom = new Dictionary<string, string>();
     Dictionary<string, int> costSoFar = new Dictionary<string, int>();
     PriorityQueue<int, string> frontier = new PriorityQueue<int, string>();
+    Graph graph;
     List<string> pathList = new List<string>();
-    Graph g = new Graph();
+
 
     public void Start()
     {
-        g.nodes = new Dictionary<string, string[]>();
-        g.nodePositions = new Dictionary<string, Vector2>();
+        graph = new Graph();
+        graph.nodes = new Dictionary<string, string[]>();
+        graph.nodePositions = new Dictionary<string, Vector2>();
+        graph.edges = new Dictionary<nodePair, nodeEdge>();
 
-        var mapData = JsonUtility.FromJson<Map>(jsonData.text);
+        Map mapData = JsonUtility.FromJson<Map>(jsonData.text);
+
         foreach (node node in mapData.Nodes)
         {
-            g.nodes.Add(node.ID, node.Neighbors);
-            g.nodePositions.Add(node.ID, node.Position);
+            graph.nodes.Add(node.ID, node.Neighbors);
+            graph.nodePositions.Add(node.ID, node.Position);
+        }
+        foreach (nodeEdge edge in mapData.Edges)
+        {
+            graph.edges.Add(edge.pairA, edge);
         }
 
-        List<nodeEdge> edges = new List<nodeEdge>();
-        
-        foreach (var node in g.nodes)
-        {
-            foreach (var neigbour in node.Value)
-            {
-                Debug.Log(node.Key + "-" + neigbour);
-                nodeEdge edge = new nodeEdge();
-                edge.pairA = new nodePair(node.Key, neigbour);
-                edge.pairB = new nodePair(neigbour, node.Key);
-                edge.Cost = 2;
-                edge.Mode = edgeMode.Normal;
-
-                if (edges.Count == 0) { edges.Add(edge); }
-
-                foreach(var existingEdge in edges)
-                {
-                    if (existingEdge.pairA != edge.pairA  && existingEdge.pairB != edge.pairA)
-                    {
-                        edges.Add(edge);
-                    }
-                }
-            }    
-        }
-        // g.
-
-        Debug.LogWarning(edges.Count);
-        Debug.LogWarning(JsonUtility.ToJson(edges.ToArray()));
-
-        /*
-
-        g.specialEdges = new Dictionary<nodeEdge, int>
-        {
-            {new nodeEdge( "A","F" ), 50 },
-            {new nodeEdge("D","F"), 50 },
-            {new nodeEdge("F","A" ), 50 },
-            {new nodeEdge("F","D"), 50 }
-        };*/
-
-
+        Debug.Log(Search(graph, start, goal).ToString());
     }
 
     public int Heuristic(Vector2 a, Vector2 b)
@@ -194,6 +161,11 @@ public class MapModel : MonoBehaviour
         costSoFar[start] = 0;
         pathList.Clear();
         pathList.Add(start);
+
+        if (!graph.nodes.ContainsKey(start) || !graph.nodes.ContainsKey(goal))
+        {
+            return pathList.ToArray();
+        }
 
         while (!frontier.IsEmpty)
         {
