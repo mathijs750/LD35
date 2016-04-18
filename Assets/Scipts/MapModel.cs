@@ -8,12 +8,49 @@ public enum edgeMode
     Normal, Exit, OneWay, Blocked
 }
 
+[System.Serializable]
+public struct nodePair
+{
+    public string NodeA;
+    public string NodeB;
+
+    public nodePair(string A, string B)
+    {
+        NodeA = A;
+        NodeB = B;
+    }
+
+    public override string ToString()
+    {
+        return NodeA + "-" + NodeB;
+    }
+
+    #region Comparison overrides
+    public override bool Equals(System.Object obj)
+    {
+        return obj is nodePair && this == (nodePair)obj;
+    }
+    public override int GetHashCode()
+    {
+        return NodeA.GetHashCode() ^ NodeB.GetHashCode();
+    }
+    public static bool operator ==(nodePair x, nodePair y)
+    {
+        return x.NodeA == y.NodeA && x.NodeB == y.NodeB;
+    }
+    public static bool operator !=(nodePair x, nodePair y)
+    {
+        return !(x == y);
+    }
+    #endregion
+}
+
 
 [System.Serializable]
 public struct nodeEdge
 {
-    public string nodeA;
-    public string nodeB;
+    public nodePair pairA;
+    public nodePair pairB;
     public int Cost;
     public edgeMode Mode;
     public int Traffic;
@@ -31,6 +68,7 @@ public struct node
 public struct Map
 {
     public node[] Nodes;
+    public nodeEdge[] Edges;
 }
 
 public class Graph
@@ -46,7 +84,7 @@ public class Graph
 
     public int Cost(string a, string b)
     {
-        var edgeA = new nodeEdge(a, b);
+    /*   var edgeA = new nodeEdge(a, b);
         var edgeB = new nodeEdge(b, a);
 
         if (specialEdges.ContainsKey(edgeA))
@@ -56,7 +94,7 @@ public class Graph
         else if (specialEdges.ContainsKey(edgeB))
         {
             return specialEdges[edgeB];
-        }
+        }*/
         return 1;
     }
 
@@ -102,21 +140,44 @@ public class MapModel : MonoBehaviour
             g.nodePositions.Add(node.ID, node.Position);
         }
 
+        List<nodeEdge> edges = new List<nodeEdge>();
+        
+        foreach (var node in g.nodes)
+        {
+            foreach (var neigbour in node.Value)
+            {
+                Debug.Log(node.Key + "-" + neigbour);
+                nodeEdge edge = new nodeEdge();
+                edge.pairA = new nodePair(node.Key, neigbour);
+                edge.pairB = new nodePair(neigbour, node.Key);
+                edge.Cost = 2;
+                edge.Mode = edgeMode.Normal;
+
+                if (edges.Count == 0) { edges.Add(edge); }
+
+                foreach(var existingEdge in edges)
+                {
+                    if (existingEdge.pairA != edge.pairA  && existingEdge.pairB != edge.pairA)
+                    {
+                        edges.Add(edge);
+                    }
+                }
+            }    
+        }
+        // g.
+
+        Debug.LogWarning(edges.Count);
+        Debug.LogWarning(JsonUtility.ToJson(edges.ToArray()));
+
+        /*
+
         g.specialEdges = new Dictionary<nodeEdge, int>
         {
             {new nodeEdge( "A","F" ), 50 },
             {new nodeEdge("D","F"), 50 },
             {new nodeEdge("F","A" ), 50 },
             {new nodeEdge("F","D"), 50 }
-        };
-
-        _sprites = new List<GameObject>();
-       foreach (var node in g.nodePositions)
-        {
-            var tmp = Instantiate(sprite, node.Value, Quaternion.identity) as GameObject;
-            _sprites.Add(tmp);
-            tmp.transform.parent = gameObject.transform;
-        }
+        };*/
 
 
     }
