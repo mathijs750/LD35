@@ -115,9 +115,9 @@ public class MapModel : MonoBehaviour
     private string start, goal;
     private List<GameObject> _sprites;
     [SerializeField]
-    private GameObject sprite;
-    [SerializeField]
     TextAsset jsonData;
+    [SerializeField]
+    private bool drawLines;
 
     // search variables
     Dictionary<string, string> cameFrom = new Dictionary<string, string>();
@@ -146,10 +146,21 @@ public class MapModel : MonoBehaviour
             graph.edges.Add(edge.pairA, edge);
         }
 
+        // test pathfinding
         var list = Search(graph, start, goal);
         foreach (var node in list)
         {
             Debug.Log(node);
+        }
+    }
+
+    void Update()
+    {
+        if (!drawLines) { return; }
+        foreach (var pair in graph.edges)
+        {
+            var par = pair.Value.pairA;
+            Debug.DrawLine(graph.nodePositions[par.NodeA], graph.nodePositions[par.NodeB]);
         }
     }
 
