@@ -146,7 +146,11 @@ public class MapModel : MonoBehaviour
             graph.edges.Add(edge.pairA, edge);
         }
 
-        Debug.Log(Search(graph, start, goal).ToString());
+        var list = Search(graph, start, goal);
+        foreach (var node in list)
+        {
+            Debug.Log(node);
+        }
     }
 
     public int Heuristic(Vector2 a, Vector2 b)
@@ -160,7 +164,7 @@ public class MapModel : MonoBehaviour
         cameFrom[start] = start;
         costSoFar[start] = 0;
         pathList.Clear();
-        pathList.Add(start);
+      //  pathList.Add(start);
 
         if (!graph.nodes.ContainsKey(start) || !graph.nodes.ContainsKey(goal))
         {
